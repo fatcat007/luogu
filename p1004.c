@@ -1,63 +1,69 @@
 #include <stdio.h>
+#include <string.h>
 
 int n;
 int a[10][10];
 int f[19][11][11];
-int i,j,k,l;
-int d[4][2] = { {0,0}, {0,-1},{-1,-1},{-1,0}};
+int i,j,k,x,y;
+int d[2][2] = { {-1,0}, {0,-1}};
 
 int main()
 {
-	scanf("%d", &n);
-	for(i=1;i<=n;i++)
-		for(j=1;j<=n;j++)
-			scanf("%d", &a[i][j]);
-
+	memset(a,0,sizeof(a));
 	memset(f,0,sizeof(f));
+	
+	scanf("%d", &n);
+	
+	for(;;){
+		scanf("%d %d %d", &j,&k,&x);
+		if(!x&&!y&&!x) break;
+		a[j][k]=x;
+	}
 
-	for(i=1;i<=n;i++)
-		for(j=1;j<=i;j++)
-			for(k=1;k<=i;k++)
+	for(i=1;i<=2*n-1;i++)
+	{
+		int p,q;
+		if(i<=n)
+		{
+			p=i;
+			q=1;
+		}
+		else
+		{
+			p=n;
+			q=i-n+1;
+		}
+
+		for(j=p,k=q;j>=1 && j<=n && k>=1 && k<=n;j--,k++)
+		{
+			for(x=p,y=q;x>=1 && x<=n && y>=1 && y<=n;x--,y++)
 			{
 				int max=0;
-				for(l=0;l<4;l++)
+				int l,t;
+				for(l=0;l<2;l++)
 				{
-					int m=j+d[l][0];
-					int n=k+d[l][1];
-					if(f[i-1][m][n]>max)
-						max=f[i-1][m][n];
+					int jj=j+d[l][0];
+					int kk=k+d[l][1];
+					for(t=0;t<2;t++)
+					{
+						int xx=x+d[t][0];
+						int yy=y+d[t][1];
+
+						if(f[i-1][jj][xx]>max)
+							max=f[i-1][jj][xx];
+					}
 				}
+				int num=a[j][k];
+				if(x!=j)
+					num+=a[x][y];
 
-				int t=a[i-j+1][j];
-				if(j!=k)
-					t+=a[i-k+1][k];
+				f[i][j][x]=max+num;
 
-				f[i][j][k]=max+t;
 			}
+		}
+	}	
 
-	for(i=n+1;i<=2*n+1;i++)
-		for(j=i-n;j<=n+1;j++)
-			for(k=i-n;k<=n+1;k++)
-			{
-				int max=0;
-				for(l=0;l<4;l++)
-				{
-					int m=j+d[l][0];
-					int n=k+d[l][1];
-					if(f[i-1][m][n]>max)
-						max=f[i-1][m][n];
-				}
-
-				int t=a[n-j+1][i-n+j-1];//i=n+1, j=1, get a[n][1]
-				if(j!=k)
-					t+=a[n-k+1][i-n+k-1];//i=n+1, k=1, get a[n][1]
-				f[i][j][k]=max+t;
-			}
-
-	//for(i=1;i<=2*n+1;i++)
-	//	if(n%2)
-	//		printf("f[%d]=%d\r\n", i, f[i][i/2+1][i/2+1]); //i=1, f[1][1][1]; i=3, f[3][2][2]
-	printf("%d", f[2*n+1][n+1][n+1]);
+	printf("%d", f[2*n-1][n][n]);
 
 	return 0;
 }

@@ -1,47 +1,70 @@
 #include <stdio.h>
 #include <string.h>
 
-#define N 100
+#define N 60
 
-int a[80][80][N];
-int f[80][80][N];
-int s[N];
+typedef unsigned long u32;
+typedef unsigned long long u64;
 
-
-void input(int a[], int d)
+int div(u32 v[], u32* pr, u32 n[], u32 d)
 {
+	u64 carry=0;
+	u64 t;
 	int i;
-	for(i=0;d;i++)
-	{
-		a[i]=d%10;
-		d/=10;
-	}
-}
+	int ret=0;
 
-void output(int a[])
-{
-	int i;
-	int f=0;
 	for(i=N-1;i>=0;i--)
 	{
-		if(a[i]) f=1;
-		if(f)
-			printf("%d",a[i]);
+		t= (carry<<32) | n[i];
+		v[i]=t/d;
+		carry=t%d;
+		if(v[i]) ret=1;
 	}
-	if(!f)
+	*pr=(u32)carry;
+
+	return ret;
+}
+
+u32 pt[N];
+char ps[1024];
+
+void print(u32 n[])
+{
+	int i;
+	u32 r;
+
+	for(i=0;i<N;i++)
+		pt[i]=n[i];
+
+	i=0;
+	while(1)
+	{
+		int ret=div(pt, &r, pt, 10);
+		ps[i++]='0'+r;
+		if(!ret) break;
+	}
+
+	if(!i)
 	{
 		printf("0");
+		return;
+	}
+
+	for(i--;i>=0;i--)
+	{
+		printf("%c", ps[i]);
 	}
 }
 
-void copy(int a[],int b[])
+
+void copy(u32 a[],u32 b[])
 {
 	int i;
 	for(i=0;i<N;i++)
 		a[i]=b[i];
 }
 
-int compare(int a[], int b[])
+int compare(u32 a[], u32 b[])
 {
 	int i;
 	for(i=N-1;i>=0;i--)
@@ -58,25 +81,43 @@ int compare(int a[], int b[])
 	return 0;
 }
 
-
-void add(int s[], int a[],int b[])
+void add(u32 s[], u32 a[],u32 b[])
 {
-	int c=0;
 	int i;
-	for(i=0;i<N;i++)
+	u32 c;
+	for(i=0,c=0;i<N;i++)
 	{
-		s[i]=a[i]+b[i]+c;
-		c=s[i]/10;
-		s[i]%=10;
+		u64 t=(u64)a[i]+(u64)b[i]+(u64)c;
+		c=(u32)(t>>32);
+		s[i]=(u32)t;
 	}
 }
+
+void shift(u32 a[], int n)
+{
+	int off=n/32;
+	int shft=n%32;
+	int i;
+
+	for(i=N-1;i>=off;i--)
+	{
+		a[i] =(a[i-off]<<shft); //shift bits
+		if(i>=off+1 && shft)
+			a[i] |=(a[i-off-1]>>(32-shft)); //add tail bits
+	}
+	for(;i>=0;i--)
+		a[i]=0;
+}
+
+u32 a[80][80][N];
+u32 f[80][80][N];
+u32 s[N];
+
 
 int main()
 {
 	int n,m;
 	int i,j,k;
-	int d;
-
 	scanf("%d %d",&n,&m);
 	
 	memset(a,0,sizeof(a));
@@ -84,9 +125,9 @@ int main()
 		for(j=0;j<m;j++)
 		{
 			//scanf("%lld", &a[i][j]);
-			scanf("%d", &d);
-			input(a[i][j],d);
+			scanf("%d", &a[i][j][0]);
 		}
+
 	//s=0;
 	memset(s,0,sizeof(0));
 
@@ -100,17 +141,15 @@ int main()
 				//long long bb=f[j-1][k+1] + a[i][k]*(1<<(m-j+1));
 				//f[j][k] = aa>bb? aa:bb;
 				//
-				int aa[N];
-				int bb[N];
-				int t;
-				copy(aa,a[i][k+j-1]);
-				copy(bb,a[i][k]);
-				for(t=0;t<m-j+1;t++)
-				{
-					add(aa, aa, aa); //aa=aa*2;
-					add(bb, bb, bb); //bb=bb*2;
-				}
+				u32 aa[N];
+				u32 bb[N];
 				
+				copy(aa,a[i][k+j-1]);
+				shift(aa,m-j+1);
+
+				copy(bb,a[i][k]);
+				shift(bb,m-j+1);
+
 				add(aa,aa,f[j-1][k]);
 				add(bb,bb,f[j-1][k+1]);
 				
@@ -120,9 +159,9 @@ int main()
 					copy(f[j][k],bb);
 				if(i==0 && j==2 && k==0 && 0)	
 				{
-					printf("aa=");output(aa);printf("\r\n");
-					printf("bb=");output(bb);printf("\r\n");
-					printf("f=");output(f[j][k]);printf("\r\n");
+					printf("aa=");print(aa);printf("\r\n");
+					printf("bb=");print(bb);printf("\r\n");
+					printf("f=");print(f[j][k]);printf("\r\n");
 				}
 			}
 		//s+=f[m][0];
@@ -130,7 +169,7 @@ int main()
 	}
 
 	//printf("%lld",s);
-	output(s);
+	print(s);
 	return 0;
 }
 

@@ -1,48 +1,36 @@
 
-#include<stdlib.h>
+#include<stdio.h>
 #include<string.h>
 
+int d,r,n;
+int nn[128];
+int nl;
+int i;
 
 int main()
 {
-	int d,r;
 	scanf("%d %d", &d, &r);
-
-	int p,b,n;
-
-	if(d>=0)
+	printf("%d=", d);
+	while(d)
 	{
-		p=0;
-		b=1;
-		while(b<d)
+		n=d%r;
+		d/=r;
+
+		if(n<0)
 		{
-			b*=(r*r);
-			p+=2;
+			n-=r;
+			d+=1;
 		}
+		nn[nl++]=n;
 	}
-	else
-	{
-		p=1;
-		b=r;
-		while(b>d)
-		{
-			b*=(r*r);
-			p+=2;
-		}
-	}
-
-	while(p>=0)
-	{
-		n=d/(b/(r*r));
-
-		if(n>=10)
-			printf("%c",'A'+n);
+	for(i=nl-1;i>=0;i--)
+		if(nn[i]>=10)
+			printf("%c",'A'+(nn[i]-10));
 		else
-			printf("%c",n)
-		d=d-b;
-		b/=r;
-		p--;
-	}
+			printf("%c",'0'+nn[i]);
+	if(nl<=0)
+		printf("0");
+	printf("(base%d)",r);
 	return 0;
 }
 
